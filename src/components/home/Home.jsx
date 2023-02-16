@@ -1,0 +1,916 @@
+import React, { useState, useEffect } from 'react';
+import "./Home.css";
+import OwlCarousel from "react-owl-carousel";
+import "owl.carousel/dist/assets/owl.carousel.css";
+import "owl.carousel/dist/assets/owl.theme.default.css";
+import $ from "jquery";
+import { createRoot } from "react-dom/client";
+import Select from "react-select";
+import axios from 'axios';
+import Cookies from 'universal-cookie';
+
+
+// Scroll to top script
+window.onscroll = function () {
+  var scrollvalue = 0;
+  scrollvalue = $(window).scrollTop();
+  // console.log(scrollvalue);
+  if (window.pageYOffset === 0) {
+    $("#backToTop").addClass("d-none");
+  } else if (scrollvalue >= 200) {
+    $("#backToTop").removeClass("d-none");
+  }
+};
+
+const options = [
+  { label: "Wedding Planning - $639.99", value: 639.99 },
+  {
+    label: "Wedding Planning (Gold - All Included) - $1,050.99",
+    value: 1050.99,
+  },
+  { label: "Invitation Website - $379.99", value: 379.99 },
+  { label: "Video Editing - $89.99", value: 89.99 },
+  { label: "Invitation Design Package - $59.99", value: 59.99 },
+  { label: "Wedding Logo - $68.99", value: 68.99 },
+  { label: "Speechwritting - $39.99", value: 39.99 },
+];
+
+// Global Veriable for adding the selected services text in modal
+var selectedServices;
+
+const Home = () => {
+  var firstName = "";
+  var lastName = "";
+  var userEmail = "";
+  var userPhone = "";
+  var cardNumber = 0;
+  var expiryMonth = 0;
+  var expiryYear = 0;
+  var cardCVC = 0;
+  var JSONdata = { fName: firstName, lName: lastName, email: userEmail, phone: userPhone, cNumber: cardNumber, eMonth: expiryMonth, eYear: expiryYear, cvc: cardCVC }
+
+  const handleOrderChange = (e) => {
+	
+	if ( e.target.id === "firstNameInput" ) {	
+		firstName = e.target.value
+	}
+	if ( e.target.id === "lastNameInput" ) {
+		lastName = e.target.value
+	}
+	if ( e.target.id === "emailInput" ) {	
+		userEmail = e.target.value
+	}
+	if ( e.target.id === "phoneInput" ) {	
+		userPhone = e.target.value
+	}
+	if ( e.target.id === "cardNumberInput") {
+		cardNumber = e.target.value
+	}
+	if ( e.target.id === "cardExpiryMonthInput") {	
+		expiryMonth = e.target.value
+	}
+	if ( e.target.id === "cardExpiryYearInput") {	
+		expiryYear = e.target.value
+	}
+	if ( e.target.id === "cardCVCInput" ) {
+		cardCVC = e.target.value
+	}
+	
+	
+  }
+  
+  
+ const processOrder = (e) => {
+	const cookies = new Cookies();
+	if ( firstName !== "" ) {
+		if (lastName !== "" ){
+			if ( userEmail !== "" ){
+				if ( userPhone !== 0 ) {
+					if ( cardNumber !== 0) {
+						if ( expiryMonth !== 0 ) {
+							if ( expiryYear !== 0 ) {
+								if ( cardCVC !== 0 ) {
+									
+									axios.get(`getCSRFToken/`)
+										.then(res => {
+											console.log(res);
+											console.log(res.data.csrfToken);
+											cookies.set('csrftoken', res.data.csrfToken, { path: '/' });
+											const csrfToken = res.data.csrfToken
+											console.log(csrfToken)
+											axios.post(`order_request/`, { data: JSONdata, headers: {"X-CSRFToken": csrfToken}, })
+											  .then(res => {
+												console.log(res);
+												console.log(res.data);
+											  })
+										})	
+
+								} else {
+									console.log("Missing CVC")
+								}
+							} else {
+								console.log("Missing Year")
+							}
+						} else {
+							console.log("Missing Expiry")
+						}
+					} else {
+						console.log("Missing Card #")
+					}
+				} else {
+					console.log("Missing Phone")
+				}
+			} else {
+				console.log("Missing Email")
+			}
+		} else {
+			console.log("Missing Last Name")
+		}
+	} else {
+		console.log("Missing First Name")
+	}
+	
+	console.log(firstName)	
+  }
+	
+  const handleChange = (e) => {
+    // Get The Selected Services Prices
+    var selectedValues = e.map((item) => item.value);
+    // Get the selected services text
+    selectedServices = e.map((item) => item.label);
+    // Get the total of selected services prices
+    var servicePrice = selectedValues.reduce((pv, cv) => {
+      return pv + (parseFloat(cv) || 0);
+    }, 0);
+    var servicePrice = parseFloat(servicePrice).toFixed(2);
+    const setServicePrice = createRoot(
+      document.getElementById("setServicePrice")
+    );
+    setServicePrice.render("$" + servicePrice);
+    // Get the fees in 10% of total price
+    var fees = parseFloat((servicePrice / 100) * 6).toFixed(2);
+    const setFees = createRoot(document.getElementById("setFees"));
+    setFees.render("$" + fees);
+    // Total Price = Service Price + Fees
+    var totalPrice = parseFloat(
+      parseFloat(servicePrice) + parseFloat(fees)
+    ).toFixed(2);
+    const setTotal = createRoot(document.getElementById("setTotal"));
+    setTotal.render("$" + totalPrice);
+    // set total price also in order modal
+    const setTotalModal = createRoot(document.getElementById("setTotalModal"));
+    setTotalModal.render("$" + totalPrice);
+  };
+
+  // Show selected services list in modal
+  function handleModal() {
+    const serviceList = selectedServices.map((item) => (
+      <p className="modal-text-para">{item}</p>
+    ));
+    const setSelectedServiceName = createRoot(
+      document.getElementById("setSelectedServiceName")
+    );
+    setSelectedServiceName.render(serviceList);
+  }
+
+  // Testimonials crousel script
+  const options1 = {
+    responsive: {
+      0: {
+        items: 1,
+      },
+      400: {
+        items: 1,
+      },
+      700: {
+        items: 2,
+      },
+      1200: {
+        items: 3,
+      },
+    },
+  };
+
+  const options2 = {
+    responsive: {
+      0: {
+        items: 2,
+      },
+      400: {
+        items: 2,
+      },
+      700: {
+        items: 4,
+      },
+      1200: {
+        items: 5,
+      },
+    },
+  };
+
+  return (
+    <>
+      {/*Back To Top Start*/}
+      <button
+        onClick={() => {
+          window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+        }}
+        style={{
+          position: "fixed",
+          bottom: "40px",
+          right: "40px",
+          textAlign: "center",
+          zIndex: "999",
+        }}
+        id="backToTop"
+        className="d-none"
+      >
+        <i className="fa-solid fa-arrow-up"></i>
+      </button>
+      {/*Back To Top End*/}
+      {/* =================== Header Area Start ================== */}
+      <section id="header-area">
+        <div className="container-fluid">
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-6 col-md-12">
+                <h1 className="heading">Wedding Planning Made Simple.</h1>
+                <h2 className="description">
+                  Let us support you have the most memorable wedding day that you can have.
+				  We work internationally to ensure that all your needs are met.
+				  Place a order now and we will take care of the rest by your side from start to finish.
+                </h2>
+                {/* 
+              <div className="btn-container">
+                  <label className="switch btn-color-mode-switch">
+                    <input
+                      type="checkbox"
+                      name="color_mode"
+                      id="color_mode"
+                      value="1"
+                    />
+                    <label
+                      for="color_mode"
+                      data-on="Qoute"
+                      data-off="Order"
+                      className="btn-color-mode-switch-inner"
+                    ></label>
+                  </label>
+                </div>
+              */}
+                <div className="form-group">
+                  <label for="">Products/Services</label>
+                  {/*
+                <select
+                    className="form-control"
+                    onChange={handleChange}
+                    multiple="multiple"
+                    id="service-select"
+                  >
+                    <option value="639.99">Wedding Planning - $639.99</option>
+                    <option value="1050.99">
+                      Wedding Planning (Gold - All Included) - $1,050.99
+                    </option>
+                    <option value="379.99">Invitation Website - $379.99</option>
+                    <option value="89.99">Video Editing - $89.99</option>
+                    <option value="59.99">
+                      Invitation Design Package - $59.99
+                    </option>
+                    <option value="68.99">Wedding Logo - $68.99</option>
+                    <option value="39.99">Speechwritting - $39.99</option>
+                  </select>
+              */}
+                  <Select isMulti options={options} onChange={handleChange} />
+                </div>
+                <div className="row rate-area">
+                  <div className="col-md-7 rate-item-flex">
+                    <div className="item">
+                      <h3 className="price-lable">Services</h3>
+                      <h2 className="price" id="setServicePrice">
+                        $0.0
+                      </h2>
+                    </div>
+                    <div className="item text-right">
+                      <h3 className="price-lable">Fees</h3>
+                      <h2 className="price" id="setFees">
+                        $0.0
+                      </h2>
+                    </div>
+                    <div className="item text-right">
+                      <h3 className="price-lable">Total</h3>
+                      <h2 className="price" id="setTotal">
+                        $0.0
+                      </h2>
+                    </div>
+                  </div>
+                  <div className="col-md-5">
+                    <a
+                      href="javasrcipt::void(0)"
+                      className="order-btn"
+                      data-bs-toggle="modal"
+                      data-bs-target="#exampleModal"
+                      id="showModal"
+                      onClick={handleModal}
+                    >
+                      Order Now
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6 img-flex-col">
+                <div className="header-img">
+                  <img src="/assets/img/header.png" alt="" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* =================== Header Area End ================== */}
+
+      {/* =================== Category Area Start ================== */}
+      <section id="category-area">
+        <div className="container-fluid category-area">
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-1"></div>
+              <div className="col-lg-10">
+                <OwlCarousel
+                  className="owl-theme"
+                  loop
+                  margin={10}
+                  {...options2}
+                >
+                  <div>
+                    <div className="cat-col">
+                        <div className="image-area">
+                          <img
+                            src="/assets/img/cat1.png"
+                            className="w-100"
+                            alt=""
+                          />
+                        </div>
+                        <h3 className="cat-name">Invitation Website</h3>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="cat-col">
+                        <div className="image-area">
+                          <img
+                            src="/assets/img/cat2.png"
+                            className="w-100"
+                            alt=""
+                          />
+                        </div>
+                        <h3 className="cat-name">Video editing</h3>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="cat-col">
+                        <div className="image-area">
+                          <img
+                            src="https://images3.alphacoders.com/276/276565.jpg"
+                            className="w-100"
+                            alt=""
+                          />
+                        </div>
+                        <h3 className="cat-name">Cartoon Portrait</h3>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="cat-col">
+                        <div className="image-area">
+                          <img
+                            src="/assets/img/cat4.png"
+                            className="w-100"
+                            alt=""
+                          />
+                        </div>
+                        <h3 className="cat-name">Invitation Packages</h3>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="cat-col">
+                        <div className="image-area">
+                          <img
+                            src="/assets/img/cat5.png"
+                            className="w-100"
+                            alt=""
+                          />
+                        </div>
+                        <h3 className="cat-name">Weeding Logo</h3>
+                    </div>
+                  </div>
+                </OwlCarousel>
+              </div>
+
+              <div className="col-lg-1"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* =================== Category Area End ================== */}
+
+      {/* =================== Service Area Start ================== */}
+      <section id="service-area">
+        <div className="container-fluid">
+          <div className="container">
+            <div className="row">
+              <div className="col-md-6 left-area">
+                <div
+                  className="img-area"
+                  style={{ backgroundImage: 'url("/assets/img/service.png")' }}
+                ></div>
+                <div className="img-card-area">
+                  <h3 className="title">Invitation Website</h3>
+                  <p className="description">
+                    Let’s Look At The Wedding Theme That You Can Choose To Be
+                    Your Wedding Style Which of Course Can’t Be Normal
+                  </p>
+                  <a href="">
+                    <img
+                      src="/assets/img/arrow-square-right.png"
+                      alt=""
+                      style={{ float: "right" }}
+                    />
+                  </a>
+                </div>
+              </div>
+              <div className="col-md-6 right-area">
+                <h2 className="title"> Let's Plan Your Ideal Wedding </h2>
+                <p className="description">
+                  Full dedication will be provided, no matter your ideal location or scenerary we will work with you to obtain your ideal wedding.
+                </p>
+                <div className="row about-service">
+                  <div className="col-lg-4 col-md-6">
+                    <h2 className="numbers">11,000+</h2>
+                    <p className="detail">Wedding Locations</p>
+                  </div>
+                  <div className="col-lg-4 col-md-6">
+                    <h2 className="numbers">3,500+</h2>
+                    <p className="detail">Food Cateres</p>
+                  </div>
+                  <div className="col-lg-4 col-md-6">
+                    <h2 className="numbers">2,800+</h2>
+                    <p className="detail">Wedding Florist</p>
+                  </div>
+                </div>
+                <a href="" className="more-link">
+                  More about service
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* =================== Service Area End ================== */}
+
+      {/* =================== Plan Area Start ================== */}
+      <section id="plan-area">
+        <div className="container-fluid bg-left">
+          <div className="container bg-golden">
+            <div className="row d-flex align-items-center">
+              <div className="col-md-6 left-area">
+                <h2 className="title">
+                  Plan your wedding from home and on the go.
+                </h2>
+                <p className="description">
+                  With our free, intuitive and simple to use planning tools, you
+                  can keep up to date on your wedding admin wherever you are.
+                  From checklists to table plans and budget trackers, we've got
+                  you covered.
+                </p>
+                <a href="" className="sign-up-btn">
+                  Sign up for free planning tools
+                  <img src="/assets/img/arrow-square-right.png" alt="" />
+                </a>
+              </div>
+              <div className="col-md-6">
+                <div
+                  className="img-area"
+                  style={{ backgroundImage: 'url("/assets/img/plan.png")' }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* =================== Plan Area End ================== */}
+
+      {/* =================== Inspiration Area Start ================== */}
+      <section id="inspiration-section">
+        <div className="container-fluid">
+          <div className="container">
+            <div className="row d-flex align-items-center">
+              <div className="col-md-6 left-area">
+                <div
+                  className="img-area"
+                  style={{ backgroundImage: 'url("/assets/img/gallery.png")' }}
+                ></div>
+              </div>
+              <div className="col-md-6 right-area">
+                <h3 className="title">
+                  Get your daily dose of wedding inspiration.
+                </h3>
+                <p className="description">
+                  From beautiful real weddings to top tips shared by those in
+                  the know, we'll keep you inspired with a healthy dose of
+                  wedding ideas and advice.
+                </p>
+                <a href="" className="read-blog-btn">
+                  Read our blog
+                  <img src="/assets/img/arrow-square-right.png" alt="" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* =================== Inspiration Area End ================== */}
+
+
+      {/* =================== Faq Area Start ================== */}
+      <section id="faq-area">
+        <div className="container-fluid">
+          <div className="container">
+            <div className="row">
+              <div className="col-md-12">
+                <h3 className="title">Frequently Asked Question</h3>
+                <p className="description">
+                  We have created a new product that will help designers,
+                  developers and companies create websites for their startups
+                  quickly and easily.
+                </p>
+              </div>
+            </div>
+            <div className="row faq-row">
+              <div className="col-md-1"></div>
+              <div className="col-md-10">
+                <div className="faq-drawer">
+                  <input
+                    className="faq-drawer__trigger"
+                    id="faq-drawer"
+                    type="checkbox"
+                  />
+                  <label className="faq-drawer__title" for="faq-drawer">
+                    how to register New Account ?
+                  </label>
+                  <div className="faq-drawer__content-wrapper">
+                    <div className="faq-drawer__content">
+                      <p className="faq-description">
+                        We pay you up front while your customer pays us. Your
+                        customers miss a payment? No problem, we'll still pay
+                        you.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="faq-drawer">
+                  <input
+                    className="faq-drawer__trigger"
+                    id="faq-drawer-2"
+                    type="checkbox"
+                  />
+                  <label className="faq-drawer__title" for="faq-drawer-2">
+                    How To Order ?
+                  </label>
+                  <div className="faq-drawer__content-wrapper">
+                    <div className="faq-drawer__content">
+                      <p className="faq-description">
+                        We pay you up front while your customer pays us. Your
+                        customers miss a payment? No problem, we'll still pay
+                        you.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="faq-drawer">
+                  <input
+                    className="faq-drawer__trigger"
+                    id="faq-drawer-3"
+                    type="checkbox"
+                  />
+                  <label className="faq-drawer__title" for="faq-drawer-3">
+                    is it necessary to pay to become Order ?
+                  </label>
+                  <div className="faq-drawer__content-wrapper">
+                    <div className="faq-drawer__content">
+                      <p className="faq-description">
+                        We pay you up front while your customer pays us. Your
+                        customers miss a payment? No problem, we'll still pay
+                        you.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="faq-drawer">
+                  <input
+                    className="faq-drawer__trigger"
+                    id="faq-drawer-4"
+                    type="checkbox"
+                  />
+                  <label className="faq-drawer__title" for="faq-drawer-4">
+                    is it necessary to pay to become Order ?
+                  </label>
+                  <div className="faq-drawer__content-wrapper">
+                    <div className="faq-drawer__content">
+                      <p className="faq-description">
+                        We pay you up front while your customer pays us. Your
+                        customers miss a payment? No problem, we'll still pay
+                        you.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <br />
+                <div className="btn-div d-flex justify-content-center">
+                  <a href="" className="load-more-btn">
+                    Load More
+                  </a>
+                </div>
+              </div>
+              <div className="col-md-1"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* =================== Faq Area End ================== */}
+
+      {/* =================== Footer Area Start ================== */}
+      <section id="footer-area">
+        <div className="container-fluid footer-bg">
+          <div className="container">
+            <div className="row">
+              <div className="col-md-7">
+                <img src="/assets/img/footer-logo.png" alt="" />
+                <p className="description">
+                  Explore the best wedding suppliers in your area. Create your
+                  shortlist and when you’re ready, easily book and manage
+                  communications through Wedding Planner.
+                </p>
+                <div className="icon-area">
+                  <div className="icon-main">
+                    <a href="">
+                      <i className="fa-brands fa-instagram"></i>
+                    </a>
+                  </div>
+                  <div className="icon-main">
+                    <a href="">
+                      <i className="fa-brands fa-twitter"></i>
+                    </a>
+                  </div>
+                  <div className="icon-main">
+                    <a href="">
+                      <i className="fa-brands fa-youtube"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-5">
+                <div className="row">
+                  <div className="col-md-6">
+                    <h3 className="link-title">Pages</h3>
+                    <a href="" className="link first-link">
+                      Home
+                    </a>
+                    <a href="" className="link">
+                      Community
+                    </a>
+                    <a href="" className="link">
+                      Club
+                    </a>
+                    <a href="" className="link">
+                      Working for WP
+                    </a>
+                    <a href="" className="link">
+                      About us
+                    </a>
+                    <a href="" className="link">
+                      Apply Online
+                    </a>
+                  </div>
+                  <div className="col-md-6">
+                    <h3 className="link-title">About</h3>
+                    <a href="" className="link first-link">
+                      Terms & Conditions
+                    </a>
+                    <a href="" className="link">
+                      Privacy Policy
+                    </a>
+                    <a href="" className="link">
+                      About
+                    </a>
+                    <a href="" className="link">
+                      Sitemap
+                    </a>
+                    <a href="" className="link">
+                      Disclaimer
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Copyright area start*/}
+        <div className="container-fluid copyright-footer">
+          <div className="container">
+            <div className="row">
+              <div className="col-md-12">
+                <p className="copyright-text">
+                  © 2022 Wedding Planer. All rights reserved
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Copyright area end*/}
+      </section>
+      {/* =================== Footer Area End ================== */}
+
+      {/*Modal for order now*/}
+
+      <div
+        className="modal fade"
+        id="exampleModal"
+        tabindex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel">
+                Order
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <form>
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label for="">First Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="first_name"
+						id="firstNameInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label for="">Last Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="last_name"
+						id="lastNameInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label for="">Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+						id="emailInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label for="">Phone</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="date_time"
+						id="phoneInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="row mt-4">
+                  <div className="col-md-12">
+                    <h4 className="modal-text-title">Card Information</h4>
+                    {/*<div id="setSelectedServiceName"></div>*/}
+                  </div>
+                  {/*
+                <div className="col-md-6" style={{ textAlign: "right" }}>
+                    <h4 className="modal-text-title">Price</h4>
+                    <div id="setSelectedServicePrice"></div>
+                  </div>
+                */}
+                </div>
+                <div className="row">
+                  <div className="col-md-12">
+                    <div className="from-group">
+                      <label for="">Card Number</label>
+                      <input
+                        type="text"
+                        name="card-number"
+                        className="form-control"
+                        maxLength="16"
+						id="cardNumberInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-4">
+                    <div className="from-group">
+                      <label for="">Expiry Month</label>
+                      <input
+                        type="text"
+                        name="expiry_month"
+                        className="form-control"
+                        maxLength="2"
+						id="cardExpiryMonthInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="from-group">
+                      <label for="">Expiry Year</label>
+                      <input
+                        type="text"
+                        name="expiry_year"
+                        className="form-control"
+                        maxLength="4"
+						id="cardExpiryYearInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="from-group">
+                      <label for="">CVC</label>
+                      <input
+                        type="text"
+                        name="cvc"
+                        className="form-control"
+                        maxLength="3"
+						id="cardCVCInput"
+						onChange={handleOrderChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="row mt-2">
+                  <div className="col-md-12" style={{ textAlign: "right" }}>
+                    {/*
+                   <h4 className="modal-text-title">
+                      Fees:{" "}
+                      <span id="setFeesModal" className="modal-text-para">
+                        0
+                      </span>
+                    </h4>
+                  */}
+                    <h4 className="modal-text-title">
+                      Total:{" "}
+                      <span id="setTotalModal" className="modal-text-para">
+                        $0
+                      </span>
+                    </h4>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer pt-0">
+              <button
+                type="button"
+                className="modal-credit-btn btn btn-primary"
+				onClick={processOrder}
+              >
+                Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Home;

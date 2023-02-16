@@ -1,0 +1,38 @@
+.navbar {
+  padding: 34px 0px;
+  display: flex;
+  align-items: center;
+  background-color: white !important;
+}
+.navbar-light .navbar-toggler {
+  border-color: var(--darkgolden);
+  background-color: var(--golden);
+  color: var(--darkgolden);
+}
+.navbar-light .navbar-nav .nav-link {
+  font-family: var(--productfont);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 19px;
+  letter-spacing: 0.1px;
+  color: #121212;
+  padding-right: 30px;
+}
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link.active {
+  color: var(--golden);
+}
+.navbar-light .navbar-nav {
+  display: flex;
+  align-items: center;
+}
+.navbar-light .navbar-nav .nav-link.try-btn {
+  font-family: var(--productfont);
+  padding: 13px 35px;
+  background-color: var(--golden);
+  border: none;
+  font-size: 18px;
+  color: var(--darkgolden);
+  margin-left: 10px;
+}
